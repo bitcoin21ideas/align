@@ -1,5 +1,5 @@
 {
-  "name": "Walking Notes Processing",
+  "name": "Align",
   "nodes": [
     {
       "parameters": {
@@ -91,6 +91,8 @@
       ],
       "id": "1c4f0252-47cd-479e-b57d-f67310492625",
       "name": "Message a model",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
       "credentials": {
         "googlePalmApi": {
           "id": "YOUR-GEMINI-CREDENTIAL-ID",
@@ -411,6 +413,7 @@
           "cachedResultUrl": "https://github.com/YOUR-GITHUB-USERNAME/YOUR-WALKS-REPO"
         },
         "filePath": "={{ 'walks/' + $('Parse Output').item.json.today + '.md' }}",
+        "asBinaryProperty": false,
         "additionalParameters": {}
       },
       "type": "n8n-nodes-base.github",
@@ -500,7 +503,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const content = items[0].json.content;\n\nif (!content || items[0].json.error) {\n  return [{ json: { existingContent: '', fileExists: false } }];\n}\n\ntry {\n  const decoded = Buffer.from(content, 'base64').toString('utf-8');\n  return [{ json: { existingContent: decoded, fileExists: true } }];\n} catch(e) {\n  return [{ json: { existingContent: '', fileExists: false } }];\n}"
+        "jsCode": "const content = items[0].json.content;\nconst sha = items[0].json.sha;\n\nif (!content || items[0].json.error) {\n  return [{ json: { existingContent: '', fileExists: false, sha: '' } }];\n}\n\ntry {\n  const decoded = Buffer.from(content, 'base64').toString('utf-8');\n  return [{ json: { existingContent: decoded, fileExists: true, sha: sha } }];\n} catch(e) {\n  return [{ json: { existingContent: '', fileExists: false, sha: '' } }];\n}"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -798,7 +801,7 @@
     "timeSavedMode": "fixed",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "b110158c-a20a-4de4-a5de-a5d18da4918b",
+  "versionId": "c01cdfcb-73a7-42ad-9b19-b904442eac7a",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": ""

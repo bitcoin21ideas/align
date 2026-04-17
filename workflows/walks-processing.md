@@ -117,6 +117,9 @@ The system prompt is injected at runtime via the `Decode prompt` node —
 it is not embedded here. Edit `prompts/gemini-main.md` directly; 
 changes take effect on the next run.
 
+Configured with `retryOnFail: true` and a 5-second wait between retries 
+to handle transient Gemini API errors without manual re-runs.
+
 Produces a single text response containing all four outputs separated 
 by delimiter lines.
 
@@ -183,11 +186,13 @@ is created automatically at the start of each month.
 Attempts to fetch `walks/YYYY-MM-DD.md`. The node is set to 
 `continueRegularOutput` on error — a 404 (file not found) is the 
 expected state on first run of the day and should not halt the workflow.
+`asBinaryProperty: false` is required so the GitHub API returns file 
+content as JSON rather than binary data.
 
 **Decode daily note** (Code)  
 Handles both cases: if the file exists, decodes and returns the content 
-with `fileExists: true`; if not (error or empty content), returns an 
-empty string with `fileExists: false`.
+with `fileExists: true` and the file's `sha`; if not (error or empty 
+content), returns an empty string with `fileExists: false`.
 
 **If**  
 Routes on `fileExists`:
