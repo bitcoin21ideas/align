@@ -1,0 +1,808 @@
+{
+  "name": "Walking Notes Processing",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "process-the-walk",
+        "options": {
+          "binaryData": true
+        }
+      },
+      "id": "aa7fb30c-cef5-45cb-a7a4-22ebeb2d1c42",
+      "name": "Webhook (Receive File)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        64
+      ],
+      "webhookId": "YOUR-WEBHOOK-ID"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.deepgram.com/v1/listen",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "nova-3"
+            },
+            {
+              "name": "smart_format",
+              "value": "true"
+            },
+            {
+              "name": "detect_language",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        80,
+        64
+      ],
+      "id": "c9f8623e-b9ca-4c97-8e30-32daa16caa07",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR-DEEPGRAM-CREDENTIAL-ID",
+          "name": "Deepgram Header Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3-flash-preview",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3-flash-preview"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "==TODAY'S DATE: {{ $json.today }}\n\nROLLING CONTEXT:\n{{ $json.rollingContext }}\n\nTODAY'S TRANSCRIPT:\n{{ $json.transcript }}"
+            },
+            {
+              "content": "={{ $('Decode prompt').item.json.prompt }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1408,
+        64
+      ],
+      "id": "1c4f0252-47cd-479e-b57d-f67310492625",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR-GEMINI-CREDENTIAL-ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const binaryData = items[0].json.content;\nconst decoded = Buffer.from(binaryData, 'base64').toString('utf-8');\n\nreturn [{\n  json: {\n    rollingContext: decoded,\n    transcript: $('Get transcript').item.json.transcript,\n    today: new Date().toISOString().slice(0, 10)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        64
+      ],
+      "id": "5b20c1a3-34b2-4a00-9965-13eabd97af2f",
+      "name": "Decode"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = items[0].json.content.parts[0].text;\n\nconst parts = raw.split('===ROLLING_UPDATE===');\nif (parts.length < 2) {\n  throw new Error('Missing ===ROLLING_UPDATE=== delimiter — check Gemini output');\n}\n\nconst rollingAndRest = parts[1].split('===ARCHIVE_ENTRIES===');\nif (rollingAndRest.length < 2) {\n  throw new Error('Missing ===ARCHIVE_ENTRIES=== delimiter — check Gemini output');\n}\n\nconst archiveAndMemory = rollingAndRest[1].split('===MEMORY_ENTRIES===');\nif (archiveAndMemory.length < 2) {\n  throw new Error('Missing ===MEMORY_ENTRIES=== delimiter — check Gemini output');\n}\n\nreturn [{\n  json: {\n    dailyNote:      parts[0].trim(),\n    rollingUpdate:  rollingAndRest[0].trim(),\n    archiveEntries: archiveAndMemory[0].trim(),\n    memoryEntries:  archiveAndMemory[1].trim(),\n    today:          new Date().toISOString().slice(0, 10)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        64
+      ],
+      "id": "2bd055c1-9bfe-43d3-a322-f52cecc3461e",
+      "name": "Parse Output"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "value": "https://github.com/YOUR-GITHUB-USERNAME",
+          "mode": "url"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "YOUR-WALKS-REPO",
+          "mode": "list",
+          "cachedResultName": "YOUR-WALKS-REPO",
+          "cachedResultUrl": "https://github.com/YOUR-GITHUB-USERNAME/YOUR-WALKS-REPO"
+        },
+        "filePath": "handover/rolling-handover.md",
+        "fileContent": "={{ $('Parse Output').item.json.rollingUpdate }}",
+        "commitMessage": "={{ 'handover: ' + $('Parse Output').item.json.today }}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        2064,
+        -48
+      ],
+      "id": "ac753b76-f656-478b-a99a-c4660f2421cf",
+      "name": "Edit a file",
+      "credentials": {
+        "githubApi": {
+          "id": "YOUR-GITHUB-CREDENTIAL-ID",
+          "name": "GitHub Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "owner": {
+          "__rl": true,
+          "value": "https://github.com/YOUR-GITHUB-USERNAME",
+          "mode": "url"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "YOUR-WALKS-REPO",
+          "mode": "list",
+          "cachedResultName": "YOUR-WALKS-REPO",
+          "cachedResultUrl": "https://github.com/YOUR-GITHUB-USERNAME/YOUR-WALKS-REPO"
+        },
+        "filePath": "={{ 'walks/' + $('Parse Output').item.json.today + '.md' }}",
+        "fileContent": "={{ $('Parse Output').item.json.dailyNote }}",
+        "commitMessage": "={{ 'walks: ' + $('Parse Output').item.json.today }}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        2688,
+        -48
+      ],
+      "id": "d195ffc8-3d22-45c6-9203-82466f57e4f8",
+      "name": "Create a file",
+      "credentials": {
+        "githubApi": {
+          "id": "YOUR-GITHUB-CREDENTIAL-ID",
+          "name": "GitHub Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "value": "https://github.com/YOUR-GITHUB-USERNAME",
+          "mode": "url"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "YOUR-WALKS-REPO",
+          "mode": "list",
+          "cachedResultName": "YOUR-WALKS-REPO",
+          "cachedResultUrl": "https://github.com/YOUR-GITHUB-USERNAME/YOUR-WALKS-REPO"
+        },
+        "filePath": "handover/archive.md",
+        "fileContent": "={{ $('Decode archive').item.json.existingContent + \"\\n\\n### \" + $('Parse Output').item.json.today + \"\\n\" + $('Parse Output').item.json.archiveEntries }}",
+        "commitMessage": "={{ 'archive: ' + $('Parse Output').item.json.today }}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        2448,
+        160
+      ],
+      "id": "01291778-f1df-4048-8834-263d7298211f",
+      "name": "Append to archive",
+      "credentials": {
+        "githubApi": {
+          "id": "YOUR-GITHUB-CREDENTIAL-ID",
+          "name": "GitHub Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const binaryData = items[0].json.content;\nconst decoded = Buffer.from(binaryData, 'base64').toString('utf-8');\n\nreturn [{\n  json: {\n    existingContent: decoded\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2256,
+        160
+      ],
+      "id": "e99c5a18-e2de-4974-803e-a1b79a73bcde",
+      "name": "Decode archive"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "value": "https://github.com/YOUR-GITHUB-USERNAME",
+          "mode": "url"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "YOUR-WALKS-REPO",
+          "mode": "list",
+          "cachedResultName": "YOUR-WALKS-REPO",
+          "cachedResultUrl": "https://github.com/YOUR-GITHUB-USERNAME/YOUR-WALKS-REPO"
+        },
+        "filePath": "={{ 'memory/' + $('Parse Output').item.json.today.slice(0, 7) + '.md' }}",
+        "fileContent": "={{ $('Decode memory').item.json.existingContent + \"\\n\\n## \" + $('Parse Output').item.json.today + \"\\n\\n\" + $('Parse Output').item.json.memoryEntries }}",
+        "commitMessage": "={{ 'memory: ' + $('Parse Output').item.json.today }}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        2448,
+        368
+      ],
+      "id": "975320bd-4031-4578-bd08-b63e6244720e",
+      "name": "Append memory",
+      "credentials": {
+        "githubApi": {
+          "id": "YOUR-GITHUB-CREDENTIAL-ID",
+          "name": "GitHub Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const binaryData = items[0].json.content;\nconst decoded = Buffer.from(binaryData, 'base64').toString('utf-8');\n\nreturn [{\n  json: {\n    existingContent: decoded\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2256,
+        368
+      ],
+      "id": "fa501b82-00c0-4995-aee0-102521ce36ec",
+      "name": "Decode memory"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "https://github.com/YOUR-GITHUB-USERNAME",
+          "mode": "url"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "YOUR-WALKS-REPO",
+          "mode": "list",
+          "cachedResultName": "YOUR-WALKS-REPO",
+          "cachedResultUrl": "https://github.com/YOUR-GITHUB-USERNAME/YOUR-WALKS-REPO"
+        },
+        "filePath": "handover/archive.md",
+        "asBinaryProperty": false,
+        "additionalParameters": {}
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        2064,
+        160
+      ],
+      "id": "0106ff1b-ee02-446f-be98-f6d73db78326",
+      "name": "Get archive",
+      "credentials": {
+        "githubApi": {
+          "id": "YOUR-GITHUB-CREDENTIAL-ID",
+          "name": "GitHub Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "https://github.com/YOUR-GITHUB-USERNAME",
+          "mode": "url"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "YOUR-WALKS-REPO",
+          "mode": "list",
+          "cachedResultName": "YOUR-WALKS-REPO",
+          "cachedResultUrl": "https://github.com/YOUR-GITHUB-USERNAME/YOUR-WALKS-REPO"
+        },
+        "filePath": "={{ 'memory/' + new Date().toISOString().slice(0, 7) + '.md' }}",
+        "asBinaryProperty": false,
+        "additionalParameters": {}
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        2064,
+        368
+      ],
+      "id": "2125ca45-5230-4500-bcf3-ae6b18201d0b",
+      "name": "Get memory",
+      "credentials": {
+        "githubApi": {
+          "id": "YOUR-GITHUB-CREDENTIAL-ID",
+          "name": "GitHub Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "https://github.com/YOUR-GITHUB-USERNAME",
+          "mode": "url"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "YOUR-WALKS-REPO",
+          "mode": "list",
+          "cachedResultName": "YOUR-WALKS-REPO",
+          "cachedResultUrl": "https://github.com/YOUR-GITHUB-USERNAME/YOUR-WALKS-REPO"
+        },
+        "filePath": "handover/rolling-handover.md",
+        "asBinaryProperty": false,
+        "additionalParameters": {}
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        944,
+        64
+      ],
+      "id": "e009fb8e-6bd6-404c-a24e-9aa95cc356e7",
+      "name": "Get handover",
+      "credentials": {
+        "githubApi": {
+          "id": "YOUR-GITHUB-CREDENTIAL-ID",
+          "name": "GitHub Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "https://github.com/YOUR-GITHUB-USERNAME",
+          "mode": "url"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "YOUR-WALKS-REPO",
+          "mode": "list",
+          "cachedResultName": "YOUR-WALKS-REPO",
+          "cachedResultUrl": "https://github.com/YOUR-GITHUB-USERNAME/YOUR-WALKS-REPO"
+        },
+        "filePath": "={{ 'walks/' + $('Parse Output').item.json.today + '.md' }}",
+        "additionalParameters": {}
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        2064,
+        -224
+      ],
+      "id": "1628c021-8cf1-408c-9444-e60baa8ba0cd",
+      "name": "Check daily note exists",
+      "credentials": {
+        "githubApi": {
+          "id": "YOUR-GITHUB-CREDENTIAL-ID",
+          "name": "GitHub Token"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5661c21c-2cff-4315-9b72-dfef9b63106e",
+              "leftValue": "={{ $('Decode daily note').item.json.fileExists }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2448,
+        -224
+      ],
+      "id": "c7e9d2b0-a636-4fc2-a2e5-3287c54187c5",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "value": "https://github.com/YOUR-GITHUB-USERNAME",
+          "mode": "url"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "YOUR-WALKS-REPO",
+          "mode": "list",
+          "cachedResultName": "YOUR-WALKS-REPO",
+          "cachedResultUrl": "https://github.com/YOUR-GITHUB-USERNAME/YOUR-WALKS-REPO"
+        },
+        "filePath": "={{ 'walks/' + $('Parse Output').item.json.today + '.md' }}",
+        "fileContent": "={{ $('Decode daily note').item.json.existingContent + \"\\n\\n---\\n\\n## Second Note — \" + $now.format('HH:mm') + \"\\n\\n\" + $('Parse Output').item.json.dailyNote }}",
+        "commitMessage": "={{ 'walks: ' + $('Parse Output').item.json.today }}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        2688,
+        -240
+      ],
+      "id": "c08dfaa9-9334-4906-bb27-728da6fcf7e1",
+      "name": "Edit daily note",
+      "credentials": {
+        "githubApi": {
+          "id": "YOUR-GITHUB-CREDENTIAL-ID",
+          "name": "GitHub Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const content = items[0].json.content;\n\nif (!content || items[0].json.error) {\n  return [{ json: { existingContent: '', fileExists: false } }];\n}\n\ntry {\n  const decoded = Buffer.from(content, 'base64').toString('utf-8');\n  return [{ json: { existingContent: decoded, fileExists: true } }];\n} catch(e) {\n  return [{ json: { existingContent: '', fileExists: false } }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2256,
+        -224
+      ],
+      "id": "013b7887-3496-49d1-96eb-8348be1e6d04",
+      "name": "Decode daily note"
+    },
+    {
+      "parameters": {
+        "jsCode": "if (!items[0].json.results) {\n  return [{json: {transcript: \"Error: No transcription returned\"}}];\n}\n\nconst alternatives = items[0].json.results.channels[0].alternatives[0];\nconst transcript = alternatives.paragraphs?.transcript || alternatives.transcript;\n\nreturn [{json: {transcript}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        64
+      ],
+      "id": "bb2f31ca-25af-4540-b875-e9540a0723a7",
+      "name": "Get transcript"
+    },
+    {
+      "parameters": {
+        "content": "Enhance the Memory branch to create a new YYYY-MM.md file on every 1st of each month."
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2208,
+        544
+      ],
+      "typeVersion": 1,
+      "id": "7463b0fa-bcc6-48c5-9a42-8a249e6fe88a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "https://github.com/YOUR-GITHUB-USERNAME",
+          "mode": "url"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "YOUR-ALIGN-REPO",
+          "mode": "url"
+        },
+        "filePath": "prompts/gemini-main.md",
+        "asBinaryProperty": false,
+        "additionalParameters": {}
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        512,
+        64
+      ],
+      "id": "3e593c83-8d1b-47fc-a35c-a86ce649bdbe",
+      "name": "Get prompt",
+      "credentials": {
+        "githubApi": {
+          "id": "YOUR-GITHUB-CREDENTIAL-ID",
+          "name": "GitHub Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const decoded = Buffer.from(items[0].json.content, 'base64').toString('utf-8');\nreturn [{ json: { prompt: decoded } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        64
+      ],
+      "id": "bf2820d9-8d19-4573-addd-32d197a97c4a",
+      "name": "Decode prompt"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook (Receive File)": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Get transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Parse Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decode": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Output": {
+      "main": [
+        [
+          {
+            "node": "Edit a file",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get archive",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get memory",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check daily note exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decode archive": {
+      "main": [
+        [
+          {
+            "node": "Append to archive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decode memory": {
+      "main": [
+        [
+          {
+            "node": "Append memory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get archive": {
+      "main": [
+        [
+          {
+            "node": "Decode archive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get memory": {
+      "main": [
+        [
+          {
+            "node": "Decode memory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get handover": {
+      "main": [
+        [
+          {
+            "node": "Decode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a file": {
+      "main": [
+        []
+      ]
+    },
+    "Check daily note exists": {
+      "main": [
+        [
+          {
+            "node": "Decode daily note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit daily note",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decode daily note": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get transcript": {
+      "main": [
+        [
+          {
+            "node": "Get prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get prompt": {
+      "main": [
+        [
+          {
+            "node": "Decode prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decode prompt": {
+      "main": [
+        [
+          {
+            "node": "Get handover",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "b110158c-a20a-4de4-a5de-a5d18da4918b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": ""
+  },
+  "id": "0WN9w6TIPOMTKSe1",
+  "tags": []
+}
