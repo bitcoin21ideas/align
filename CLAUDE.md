@@ -23,5 +23,8 @@ Gemini Flash, GitHub.
 - Archive and memory files must exist before first workflow run
 - On every git commit, update CHANGELOG.md — add an entry under the appropriate version with a one-line description of what changed. Keep entries minimal and direct.
 
+## Git
+- Always push with `git push origin HEAD:main` — the working branch is always a worktree, never push to it directly.
+
 ## Current status
 Core pipeline working. Discord integration next.

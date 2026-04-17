@@ -2,6 +2,11 @@
 
 ---
 
+## v0.1.3 — 2026-04-17
+
+- Add: .gitignore excluding .claude/ (ephemeral worktree state)
+- Add: Git section to CLAUDE.md documenting worktree push convention
+
 ## v0.1.2 — 2026-04-17
 
 - Update: memory entries switch from YAML blocks to Markdown list blocks with heading-as-ID (`YYYYMMDD-<slug>`)
