@@ -23,6 +23,13 @@ Effort signals: `S` = hours | `M` = 1–2 days | `L` = 3–5 days
 ## Phase 2 — Query and synthesis
 *Goal: get value back out of what's been captured.*
 
+- [ ] Memory index file + retrieval `S`  
+  Maintain `memory/index.md` — one line per entry (id, type, project, slug).
+  n8n fetches it before each Gemini call and injects it into the prompt.
+  Gemini uses the index to detect supersessions and emit `supersedes: <id>`
+  automatically. n8n appends new entry lines to the index after each run.
+  No new infrastructure — stays within the existing GitHub API pattern.
+
 - [ ] Weekly digest — `#weekly-digest` `M`  
   Scheduled Sunday run. Reads last 7 daily notes + current memory file.
   Posts structured synthesis: what got done, what stalled, patterns, 

@@ -155,12 +155,18 @@ Qualify: would a developer starting a new project benefit from knowing this? If 
 Disqualify: routine tasks, vague observations, things already obvious from context.
 
 For each item use this exact format:
----
-type: decision|constraint|mistake|pattern
-project: [project name or cross-project]
-entry: [one clear sentence — what was decided, learned, or discovered]
-why: [one sentence — the reasoning or consequence that makes this worth remembering]
----
+
+### YYYYMMDD-<slug>
+- type: decision|constraint|mistake|pattern
+- project: [project name or cross-project]
+- status: active
+- entry: [one clear sentence — what was decided, learned, or discovered]
+- why: [one sentence — the reasoning or consequence that makes this worth remembering; add a second sentence only if the causal chain has a non-obvious second step that would be lost otherwise]
+
+Rules:
+- The heading IS the entry's ID — YYYYMMDD is today's date; slug is 2–4 lowercase hyphenated words derived from the entry text (e.g. `inngest-over-bullmq`, `stripe-test-mode`)
+- `status` is always `active` for every entry you write — never change this value
+- Each entry is separated by a blank line
 
 If nothing qualifies today, output exactly: (no memory entries today)
 
