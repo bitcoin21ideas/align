@@ -2,6 +2,18 @@
 
 ---
 
+## v0.2.0 — 2026-04-18
+
+- Add: memory index — `memory/memory-index.md` injected into every Gemini call; one line per entry (`id | type | project | summary | supersedes | affects`)
+- Add: n8n nodes — Get memory index (pre-Gemini read), Extract index lines, Has new entries, Update memory index (post-memory-append write)
+- Update: Decode node — reads and decodes memory index, passes `memoryIndex` and `memoryIndexSHA` downstream
+- Update: Message a model — MEMORY INDEX section injected between date and rolling context
+- Update: Gemini prompt — three inputs declared, `supersedes` field added to OUTPUT 4, `status` field removed
+- Fix: Get memory — `continueRegularOutput` added; workflow no longer crashes on month boundary when monthly file doesn't exist yet
+- Fix: Decode memory — gracefully handles missing content instead of crashing on `Buffer.from(undefined)`
+- Update: memory-schema.md — removes `status` field and retraction section; supersession lifecycle now documented via index
+- Update: architecture.md — documents three reads and five writes, corrects `notes/` → `walks/` path, corrects Gemini retry claim
+
 ## v0.1.4 — 2026-04-18
 
 - Add: docs/competitive-landscape.md — competitor profiles, techniques to steal, memory retrieval approaches
