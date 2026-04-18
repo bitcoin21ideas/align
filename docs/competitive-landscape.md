@@ -204,7 +204,7 @@ is; users may already use these and expect similar output quality.
 ## Techniques worth stealing
 
 ### 1. MCP exposure (from Granola, Tana, Obsidian)
-Expose `memory/index.md` (and optionally monthly memory files) via an MCP
+Expose `memory/memory-index.md` (and optionally monthly memory files) via an MCP
 server. AI coding tools can then pull relevant context automatically per
 session. This closes the AI context loss problem directly. No new
 infrastructure — just an MCP wrapper over the existing GitHub files.

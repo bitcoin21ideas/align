@@ -17,7 +17,7 @@
         -160,
         64
       ],
-      "webhookId": "YOUR-WEBHOOK-ID"
+      "webhookId": "e1b0ed00-2d93-445c-8f9b-8fc3475074aa"
     },
     {
       "parameters": {
@@ -55,10 +55,12 @@
       ],
       "id": "c9f8623e-b9ca-4c97-8e30-32daa16caa07",
       "name": "HTTP Request",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
       "credentials": {
         "httpHeaderAuth": {
-          "id": "YOUR-DEEPGRAM-CREDENTIAL-ID",
-          "name": "Deepgram Header Auth"
+          "id": "bNByAARz3F8KxeDO",
+          "name": "LOOM Deepgram Header Auth"
         }
       }
     },
@@ -73,7 +75,7 @@
         "messages": {
           "values": [
             {
-              "content": "==TODAY'S DATE: {{ $json.today }}\n\nROLLING CONTEXT:\n{{ $json.rollingContext }}\n\nTODAY'S TRANSCRIPT:\n{{ $json.transcript }}"
+              "content": "==TODAY'S DATE: {{ $json.today }}\n\nMEMORY INDEX:\n{{ $json.memoryIndex }}\n\nROLLING CONTEXT:\n{{ $json.rollingContext }}\n\nTODAY'S TRANSCRIPT:\n{{ $json.transcript }}"
             },
             {
               "content": "={{ $('Decode prompt').item.json.prompt }}"
@@ -86,7 +88,7 @@
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.1,
       "position": [
-        1408,
+        1488,
         64
       ],
       "id": "1c4f0252-47cd-479e-b57d-f67310492625",
@@ -95,19 +97,19 @@
       "waitBetweenTries": 5000,
       "credentials": {
         "googlePalmApi": {
-          "id": "YOUR-GEMINI-CREDENTIAL-ID",
+          "id": "7Ro4QURT9Kr7c2Hg",
           "name": "Google Gemini(PaLM) Api account"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "const binaryData = items[0].json.content;\nconst decoded = Buffer.from(binaryData, 'base64').toString('utf-8');\n\nreturn [{\n  json: {\n    rollingContext: decoded,\n    transcript: $('Get transcript').item.json.transcript,\n    today: new Date().toISOString().slice(0, 10)\n  }\n}];"
+        "jsCode": "// Handover — reference by node name since it's no longer the direct input\nconst handoverRaw = $('Get handover').item.json;\nconst rollingContext = Buffer.from(handoverRaw.content, 'base64').toString('utf-8');\n\n// Memory index — direct input (from Get memory index)\n// items[0].json is empty object on 404 (continueRegularOutput), has content+sha on success\nlet memoryIndex = '(no entries yet)';\nlet memoryIndexSHA = '';\nif (items[0].json.content) {\n  memoryIndex = Buffer.from(items[0].json.content, 'base64').toString('utf-8').trim();\n  memoryIndexSHA = items[0].json.sha || '';\n}\n\nreturn [{\n  json: {\n    rollingContext,\n    memoryIndex,\n    memoryIndexSHA,\n    transcript: $('Get transcript').item.json.transcript,\n    today: new Date().toISOString().slice(0, 10)\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1168,
+        1312,
         64
       ],
       "id": "5b20c1a3-34b2-4a00-9965-13eabd97af2f",
@@ -132,15 +134,15 @@
         "operation": "edit",
         "owner": {
           "__rl": true,
-          "value": "https://github.com/YOUR-GITHUB-USERNAME",
+          "value": "https://github.com/bitcoin21ideas",
           "mode": "url"
         },
         "repository": {
           "__rl": true,
-          "value": "YOUR-WALKS-REPO",
+          "value": "walks",
           "mode": "list",
-          "cachedResultName": "YOUR-WALKS-REPO",
-          "cachedResultUrl": "https://github.com/YOUR-GITHUB-USERNAME/YOUR-WALKS-REPO"
+          "cachedResultName": "walks",
+          "cachedResultUrl": "https://github.com/bitcoin21ideas/walks"
         },
         "filePath": "handover/rolling-handover.md",
         "fileContent": "={{ $('Parse Output').item.json.rollingUpdate }}",
@@ -154,10 +156,11 @@
       ],
       "id": "ac753b76-f656-478b-a99a-c4660f2421cf",
       "name": "Edit a file",
+      "webhookId": "a9a46eb2-53fc-4db0-9bfa-cde12e90cabb",
       "credentials": {
         "githubApi": {
-          "id": "YOUR-GITHUB-CREDENTIAL-ID",
-          "name": "GitHub Token"
+          "id": "u0oRLNwZf6RpWMny",
+          "name": "My Walks Token"
         }
       }
     },
@@ -166,15 +169,15 @@
         "resource": "file",
         "owner": {
           "__rl": true,
-          "value": "https://github.com/YOUR-GITHUB-USERNAME",
+          "value": "https://github.com/bitcoin21ideas",
           "mode": "url"
         },
         "repository": {
           "__rl": true,
-          "value": "YOUR-WALKS-REPO",
+          "value": "walks",
           "mode": "list",
-          "cachedResultName": "YOUR-WALKS-REPO",
-          "cachedResultUrl": "https://github.com/YOUR-GITHUB-USERNAME/YOUR-WALKS-REPO"
+          "cachedResultName": "walks",
+          "cachedResultUrl": "https://github.com/bitcoin21ideas/walks"
         },
         "filePath": "={{ 'walks/' + $('Parse Output').item.json.today + '.md' }}",
         "fileContent": "={{ $('Parse Output').item.json.dailyNote }}",
@@ -188,10 +191,11 @@
       ],
       "id": "d195ffc8-3d22-45c6-9203-82466f57e4f8",
       "name": "Create a file",
+      "webhookId": "da1c752a-d250-4a46-a35f-3254945f082d",
       "credentials": {
         "githubApi": {
-          "id": "YOUR-GITHUB-CREDENTIAL-ID",
-          "name": "GitHub Token"
+          "id": "u0oRLNwZf6RpWMny",
+          "name": "My Walks Token"
         }
       }
     },
@@ -201,15 +205,15 @@
         "operation": "edit",
         "owner": {
           "__rl": true,
-          "value": "https://github.com/YOUR-GITHUB-USERNAME",
+          "value": "https://github.com/bitcoin21ideas",
           "mode": "url"
         },
         "repository": {
           "__rl": true,
-          "value": "YOUR-WALKS-REPO",
+          "value": "walks",
           "mode": "list",
-          "cachedResultName": "YOUR-WALKS-REPO",
-          "cachedResultUrl": "https://github.com/YOUR-GITHUB-USERNAME/YOUR-WALKS-REPO"
+          "cachedResultName": "walks",
+          "cachedResultUrl": "https://github.com/bitcoin21ideas/walks"
         },
         "filePath": "handover/archive.md",
         "fileContent": "={{ $('Decode archive').item.json.existingContent + \"\\n\\n### \" + $('Parse Output').item.json.today + \"\\n\" + $('Parse Output').item.json.archiveEntries }}",
@@ -223,10 +227,11 @@
       ],
       "id": "01291778-f1df-4048-8834-263d7298211f",
       "name": "Append to archive",
+      "webhookId": "a9a46eb2-53fc-4db0-9bfa-cde12e90cabb",
       "credentials": {
         "githubApi": {
-          "id": "YOUR-GITHUB-CREDENTIAL-ID",
-          "name": "GitHub Token"
+          "id": "u0oRLNwZf6RpWMny",
+          "name": "My Walks Token"
         }
       }
     },
@@ -249,15 +254,15 @@
         "operation": "edit",
         "owner": {
           "__rl": true,
-          "value": "https://github.com/YOUR-GITHUB-USERNAME",
+          "value": "https://github.com/bitcoin21ideas",
           "mode": "url"
         },
         "repository": {
           "__rl": true,
-          "value": "YOUR-WALKS-REPO",
+          "value": "walks",
           "mode": "list",
-          "cachedResultName": "YOUR-WALKS-REPO",
-          "cachedResultUrl": "https://github.com/YOUR-GITHUB-USERNAME/YOUR-WALKS-REPO"
+          "cachedResultName": "walks",
+          "cachedResultUrl": "https://github.com/bitcoin21ideas/walks"
         },
         "filePath": "={{ 'memory/' + $('Parse Output').item.json.today.slice(0, 7) + '.md' }}",
         "fileContent": "={{ $('Decode memory').item.json.existingContent + \"\\n\\n## \" + $('Parse Output').item.json.today + \"\\n\\n\" + $('Parse Output').item.json.memoryEntries }}",
@@ -271,16 +276,17 @@
       ],
       "id": "975320bd-4031-4578-bd08-b63e6244720e",
       "name": "Append memory",
+      "webhookId": "a9a46eb2-53fc-4db0-9bfa-cde12e90cabb",
       "credentials": {
         "githubApi": {
-          "id": "YOUR-GITHUB-CREDENTIAL-ID",
-          "name": "GitHub Token"
+          "id": "u0oRLNwZf6RpWMny",
+          "name": "My Walks Token"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "const binaryData = items[0].json.content;\nconst decoded = Buffer.from(binaryData, 'base64').toString('utf-8');\n\nreturn [{\n  json: {\n    existingContent: decoded\n  }\n}];"
+        "jsCode": "const content = items[0].json.content;\nif (!content) {\n  return [{ json: { existingContent: '' } }];\n}\nconst decoded = Buffer.from(content, 'base64').toString('utf-8');\nreturn [{ json: { existingContent: decoded } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -297,15 +303,15 @@
         "operation": "get",
         "owner": {
           "__rl": true,
-          "value": "https://github.com/YOUR-GITHUB-USERNAME",
+          "value": "https://github.com/bitcoin21ideas",
           "mode": "url"
         },
         "repository": {
           "__rl": true,
-          "value": "YOUR-WALKS-REPO",
+          "value": "walks",
           "mode": "list",
-          "cachedResultName": "YOUR-WALKS-REPO",
-          "cachedResultUrl": "https://github.com/YOUR-GITHUB-USERNAME/YOUR-WALKS-REPO"
+          "cachedResultName": "walks",
+          "cachedResultUrl": "https://github.com/bitcoin21ideas/walks"
         },
         "filePath": "handover/archive.md",
         "asBinaryProperty": false,
@@ -319,10 +325,11 @@
       ],
       "id": "0106ff1b-ee02-446f-be98-f6d73db78326",
       "name": "Get archive",
+      "webhookId": "cdb81808-e03b-49e6-b3ca-cad91346470b",
       "credentials": {
         "githubApi": {
-          "id": "YOUR-GITHUB-CREDENTIAL-ID",
-          "name": "GitHub Token"
+          "id": "u0oRLNwZf6RpWMny",
+          "name": "My Walks Token"
         }
       }
     },
@@ -332,15 +339,15 @@
         "operation": "get",
         "owner": {
           "__rl": true,
-          "value": "https://github.com/YOUR-GITHUB-USERNAME",
+          "value": "https://github.com/bitcoin21ideas",
           "mode": "url"
         },
         "repository": {
           "__rl": true,
-          "value": "YOUR-WALKS-REPO",
+          "value": "walks",
           "mode": "list",
-          "cachedResultName": "YOUR-WALKS-REPO",
-          "cachedResultUrl": "https://github.com/YOUR-GITHUB-USERNAME/YOUR-WALKS-REPO"
+          "cachedResultName": "walks",
+          "cachedResultUrl": "https://github.com/bitcoin21ideas/walks"
         },
         "filePath": "={{ 'memory/' + new Date().toISOString().slice(0, 7) + '.md' }}",
         "asBinaryProperty": false,
@@ -354,12 +361,14 @@
       ],
       "id": "2125ca45-5230-4500-bcf3-ae6b18201d0b",
       "name": "Get memory",
+      "webhookId": "cdb81808-e03b-49e6-b3ca-cad91346470b",
       "credentials": {
         "githubApi": {
-          "id": "YOUR-GITHUB-CREDENTIAL-ID",
-          "name": "GitHub Token"
+          "id": "u0oRLNwZf6RpWMny",
+          "name": "My Walks Token"
         }
-      }
+      },
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -367,15 +376,15 @@
         "operation": "get",
         "owner": {
           "__rl": true,
-          "value": "https://github.com/YOUR-GITHUB-USERNAME",
+          "value": "https://github.com/bitcoin21ideas",
           "mode": "url"
         },
         "repository": {
           "__rl": true,
-          "value": "YOUR-WALKS-REPO",
+          "value": "walks",
           "mode": "list",
-          "cachedResultName": "YOUR-WALKS-REPO",
-          "cachedResultUrl": "https://github.com/YOUR-GITHUB-USERNAME/YOUR-WALKS-REPO"
+          "cachedResultName": "walks",
+          "cachedResultUrl": "https://github.com/bitcoin21ideas/walks"
         },
         "filePath": "handover/rolling-handover.md",
         "asBinaryProperty": false,
@@ -384,15 +393,16 @@
       "type": "n8n-nodes-base.github",
       "typeVersion": 1.1,
       "position": [
-        944,
+        928,
         64
       ],
       "id": "e009fb8e-6bd6-404c-a24e-9aa95cc356e7",
       "name": "Get handover",
+      "webhookId": "cdb81808-e03b-49e6-b3ca-cad91346470b",
       "credentials": {
         "githubApi": {
-          "id": "YOUR-GITHUB-CREDENTIAL-ID",
-          "name": "GitHub Token"
+          "id": "u0oRLNwZf6RpWMny",
+          "name": "My Walks Token"
         }
       }
     },
@@ -402,15 +412,15 @@
         "operation": "get",
         "owner": {
           "__rl": true,
-          "value": "https://github.com/YOUR-GITHUB-USERNAME",
+          "value": "https://github.com/bitcoin21ideas",
           "mode": "url"
         },
         "repository": {
           "__rl": true,
-          "value": "YOUR-WALKS-REPO",
+          "value": "walks",
           "mode": "list",
-          "cachedResultName": "YOUR-WALKS-REPO",
-          "cachedResultUrl": "https://github.com/YOUR-GITHUB-USERNAME/YOUR-WALKS-REPO"
+          "cachedResultName": "walks",
+          "cachedResultUrl": "https://github.com/bitcoin21ideas/walks"
         },
         "filePath": "={{ 'walks/' + $('Parse Output').item.json.today + '.md' }}",
         "asBinaryProperty": false,
@@ -424,10 +434,11 @@
       ],
       "id": "1628c021-8cf1-408c-9444-e60baa8ba0cd",
       "name": "Check daily note exists",
+      "webhookId": "b61889ad-75b8-471d-98f3-d67411d3f3e2",
       "credentials": {
         "githubApi": {
-          "id": "YOUR-GITHUB-CREDENTIAL-ID",
-          "name": "GitHub Token"
+          "id": "u0oRLNwZf6RpWMny",
+          "name": "My Walks Token"
         }
       },
       "onError": "continueRegularOutput"
@@ -472,15 +483,15 @@
         "operation": "edit",
         "owner": {
           "__rl": true,
-          "value": "https://github.com/YOUR-GITHUB-USERNAME",
+          "value": "https://github.com/bitcoin21ideas",
           "mode": "url"
         },
         "repository": {
           "__rl": true,
-          "value": "YOUR-WALKS-REPO",
+          "value": "walks",
           "mode": "list",
-          "cachedResultName": "YOUR-WALKS-REPO",
-          "cachedResultUrl": "https://github.com/YOUR-GITHUB-USERNAME/YOUR-WALKS-REPO"
+          "cachedResultName": "walks",
+          "cachedResultUrl": "https://github.com/bitcoin21ideas/walks"
         },
         "filePath": "={{ 'walks/' + $('Parse Output').item.json.today + '.md' }}",
         "fileContent": "={{ $('Decode daily note').item.json.existingContent + \"\\n\\n---\\n\\n## Second Note — \" + $now.format('HH:mm') + \"\\n\\n\" + $('Parse Output').item.json.dailyNote }}",
@@ -494,10 +505,11 @@
       ],
       "id": "c08dfaa9-9334-4906-bb27-728da6fcf7e1",
       "name": "Edit daily note",
+      "webhookId": "845eafff-420a-4c7a-ae0e-cd0b1e25d10a",
       "credentials": {
         "githubApi": {
-          "id": "YOUR-GITHUB-CREDENTIAL-ID",
-          "name": "GitHub Token"
+          "id": "u0oRLNwZf6RpWMny",
+          "name": "My Walks Token"
         }
       }
     },
@@ -546,13 +558,15 @@
         "operation": "get",
         "owner": {
           "__rl": true,
-          "value": "https://github.com/YOUR-GITHUB-USERNAME",
+          "value": "https://github.com/bitcoin21ideas",
           "mode": "url"
         },
         "repository": {
           "__rl": true,
-          "value": "YOUR-ALIGN-REPO",
-          "mode": "url"
+          "value": "align",
+          "mode": "list",
+          "cachedResultName": "align",
+          "cachedResultUrl": "https://github.com/bitcoin21ideas/align"
         },
         "filePath": "prompts/gemini-main.md",
         "asBinaryProperty": false,
@@ -566,10 +580,11 @@
       ],
       "id": "3e593c83-8d1b-47fc-a35c-a86ce649bdbe",
       "name": "Get prompt",
+      "webhookId": "587edcd8-b8bd-4b56-98fc-00a996ff244a",
       "credentials": {
         "githubApi": {
-          "id": "YOUR-GITHUB-CREDENTIAL-ID",
-          "name": "GitHub Token"
+          "id": "u0oRLNwZf6RpWMny",
+          "name": "My Walks Token"
         }
       }
     },
@@ -585,6 +600,127 @@
       ],
       "id": "bf2820d9-8d19-4573-addd-32d197a97c4a",
       "name": "Decode prompt"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "https://github.com/bitcoin21ideas/",
+          "mode": "url"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "walks",
+          "mode": "list",
+          "cachedResultName": "walks",
+          "cachedResultUrl": "https://github.com/bitcoin21ideas/walks"
+        },
+        "filePath": "memory/memory-index.md",
+        "asBinaryProperty": false,
+        "additionalParameters": {}
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        1136,
+        64
+      ],
+      "id": "6244e974-b6d4-4210-8d9e-d5f8ab509afe",
+      "name": "Get memory index",
+      "webhookId": "4033be34-5ced-4990-bfc4-3335867042e6",
+      "retryOnFail": false,
+      "credentials": {
+        "githubApi": {
+          "id": "u0oRLNwZf6RpWMny",
+          "name": "My Walks Token"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const memoryEntries = $('Parse Output').item.json.memoryEntries || '';\nconst existingIndex = $('Decode').item.json.memoryIndex || '';\nconst indexSHA = $('Decode').item.json.memoryIndexSHA || '';\n\n// No entries written this session\nif (!memoryEntries || memoryEntries.trim() === '(no memory entries today)') {\n  return [{ json: { hasNewEntries: false, updatedIndex: existingIndex, indexSHA } }];\n}\n\nconst newLines = [];\nconst blocks = memoryEntries.split(/(?=###\\s+\\d{8}-)/g).filter(b => b.trim());\n\nfor (const block of blocks) {\n  const idMatch       = block.match(/###\\s+(\\d{8}-[\\w-]+)/);\n  const typeMatch     = block.match(/- type:\\s*(\\w+)/);\n  const projectMatch  = block.match(/- project:\\s*(.+)/);\n  const entryMatch    = block.match(/- entry:\\s*(.+)/);\n  const supersedesMatch = block.match(/- supersedes:\\s*(\\S+)/);\n\n  if (idMatch && typeMatch && projectMatch && entryMatch) {\n    const id         = idMatch[1].trim();\n    const type       = typeMatch[1].trim();\n    const project    = projectMatch[1].trim();\n    const raw        = entryMatch[1].trim();\n    const summary    = raw;\n    const supersedes = supersedesMatch ? supersedesMatch[1].trim() : '—';\n    const affects    = '—'; // populated in a future phase\n\n    newLines.push(`${id} | ${type} | ${project} | ${summary} | ${supersedes} | ${affects}`);\n  }\n}\n\nif (newLines.length === 0) {\n  return [{ json: { hasNewEntries: false, updatedIndex: existingIndex, indexSHA } }];\n}\n\nconst header = '<!-- v1: id | type | project | summary | supersedes | affects -->';\nconst base = (!existingIndex || existingIndex === '(no entries yet)') ? header : existingIndex;\nconst updatedIndex = base.trimEnd() + '\\n' + newLines.join('\\n') + '\\n';\n\nreturn [{ json: { hasNewEntries: true, updatedIndex, indexSHA } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2656,
+        368
+      ],
+      "id": "fb8ab114-a7a8-4f57-9355-bbf30dde84e4",
+      "name": "Extract index lines"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "93d25134-5d3f-4f6d-83d0-89a939984f51",
+              "leftValue": "={{ $json.hasNewEntries }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2864,
+        368
+      ],
+      "id": "e106bda6-634d-4d5b-a76d-df3d297400d9",
+      "name": "Has new entries"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "edit",
+        "owner": {
+          "__rl": true,
+          "value": "https://github.com/bitcoin21ideas/",
+          "mode": "url"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "walks",
+          "mode": "list",
+          "cachedResultName": "walks",
+          "cachedResultUrl": "https://github.com/bitcoin21ideas/walks"
+        },
+        "filePath": "memory/memory-index.md",
+        "fileContent": "={{ $json.updatedIndex }}",
+        "commitMessage": "={{ 'memory-index: ' + new Date().toISOString().slice(0, 10) }}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        3072,
+        352
+      ],
+      "id": "d0d67222-6c20-43bb-b1f8-5ae62641f73e",
+      "name": "Update memory index",
+      "webhookId": "2546dbce-a66f-4282-8f70-e4ea686957a4",
+      "credentials": {
+        "githubApi": {
+          "id": "u0oRLNwZf6RpWMny",
+          "name": "My Walks Token"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -707,7 +843,7 @@
       "main": [
         [
           {
-            "node": "Decode",
+            "node": "Get memory index",
             "type": "main",
             "index": 0
           }
@@ -791,6 +927,50 @@
           }
         ]
       ]
+    },
+    "Get memory index": {
+      "main": [
+        [
+          {
+            "node": "Decode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append memory": {
+      "main": [
+        [
+          {
+            "node": "Extract index lines",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract index lines": {
+      "main": [
+        [
+          {
+            "node": "Has new entries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has new entries": {
+      "main": [
+        [
+          {
+            "node": "Update memory index",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -799,13 +979,27 @@
     "binaryMode": "separate",
     "availableInMCP": false,
     "timeSavedMode": "fixed",
+    "errorWorkflow": "hKwMHDUEBHWVPu5V",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "c01cdfcb-73a7-42ad-9b19-b904442eac7a",
+  "versionId": "3f12c10b-a988-4043-a0db-404de812a23b",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": ""
+    "instanceId": "d107b667dbcfe458d31a1af9d1fa4cf48ab581d17d0b88e095c67421f97a6dae"
   },
   "id": "0WN9w6TIPOMTKSe1",
-  "tags": []
+  "tags": [
+    {
+      "updatedAt": "2026-02-12T06:02:53.663Z",
+      "createdAt": "2026-02-12T06:02:53.663Z",
+      "id": "5yah6pzKGQBF7TZ4",
+      "name": "loom"
+    },
+    {
+      "updatedAt": "2026-04-05T04:20:20.533Z",
+      "createdAt": "2026-04-05T04:20:20.533Z",
+      "id": "mMQJ05uXx69h21PQ",
+      "name": "personal"
+    }
+  ]
 }
