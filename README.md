@@ -39,9 +39,9 @@ get removed. The result is a document you can act from, not just archive to.
 
 1. Record a voice monologue via iOS Shortcut → uploads to n8n webhook
 2. Deepgram transcribes the audio
-3. n8n reads the current rolling handover from GitHub
-4. Gemini Flash processes: transcript + handover → 4 delimited outputs
-5. n8n writes all four outputs to GitHub
+3. n8n reads the current rolling handover and memory index from GitHub
+4. Gemini Flash processes: transcript + handover + memory index → 4 delimited outputs
+5. n8n writes all four outputs to GitHub; appends new entries to the memory index
 
 Total runtime: ~30–60 seconds.
 
@@ -61,8 +61,9 @@ align/
     ├── philosophy.md       # design principles and why they exist
     ├── architecture.md     # full pipeline and data flow
     ├── memory-schema.md    # memory entry types, format, and examples
-    ├── discord-design.md   # Discord integration design spec
-    └── product-vision.md   # longer-horizon product thinking
+    ├── discord-design.md          # Discord integration design spec
+    ├── product-vision.md          # longer-horizon product thinking
+    └── competitive-landscape.md   # competitor profiles and techniques
 ```
 
 Storage lives in a separate private repository:
@@ -71,7 +72,9 @@ Storage lives in a separate private repository:
 (storage repo)/
 ├── walks/                  # daily notes
 ├── handover/               # rolling-handover.md + archive.md
-└── memory/                 # monthly memory files
+└── memory/
+    ├── memory-index.md     # flat index of all memory entries, injected each run
+    └── YYYY-MM.md          # monthly memory files
 ```
 
 ---
@@ -102,6 +105,7 @@ The storage repository must contain these files before the first run:
 
 - `handover/rolling-handover.md` — can be empty or seeded with existing tasks
 - `handover/archive.md` — can be empty
+- `memory/memory-index.md` — must exist with the v1 header line (see `docs/memory-schema.md`)
 - `memory/YYYY-MM.md` — current month, can be empty
 
 ---

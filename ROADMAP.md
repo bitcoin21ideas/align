@@ -23,12 +23,11 @@ Effort signals: `S` = hours | `M` = 1–2 days | `L` = 3–5 days
 ## Phase 2 — Query and synthesis
 *Goal: get value back out of what's been captured.*
 
-- [ ] Memory index file + retrieval `S`  
-  Maintain `memory/index.md` — one line per entry (id, type, project, slug).
-  n8n fetches it before each Gemini call and injects it into the prompt.
-  Gemini uses the index to detect supersessions and emit `supersedes: <id>`
-  automatically. n8n appends new entry lines to the index after each run.
-  No new infrastructure — stays within the existing GitHub API pattern.
+- [x] Memory index file + retrieval `S`  
+  `memory/memory-index.md` — one line per entry (id, type, project, summary, supersedes, affects).
+  Fetched before each Gemini call and injected into the prompt. Gemini detects
+  supersessions and emits `supersedes: <id>` automatically. New entries appended
+  to the index after each run. Shipped in v0.2.0.
 
 - [ ] Weekly digest — `#weekly-digest` `M`  
   Scheduled Sunday run. Reads last 7 daily notes + current memory file.
@@ -83,3 +82,4 @@ Effort signals: `S` = hours | `M` = 1–2 days | `L` = 3–5 days
 - [x] iOS Shortcut trigger
 - [x] Multiple recordings per day (append under timestamped section)
 - [x] Repo documentation
+- [x] Memory index — persistent flat index injected into every Gemini call, supersession detection live (v0.2.0)
