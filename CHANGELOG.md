@@ -2,6 +2,11 @@
 
 ---
 
+## v0.1.4 — 2026-04-18
+
+- Add: docs/competitive-landscape.md — competitor profiles, techniques to steal, memory retrieval approaches
+- Update: docs/product-vision.md market gap section names specific tools and links to new landscape doc
+
 ## v0.1.3 — 2026-04-17
 
 - Add: .gitignore excluding .claude/ (ephemeral worktree state)

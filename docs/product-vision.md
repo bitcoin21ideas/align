@@ -44,27 +44,36 @@ Together: a system you can trust because it cannot become untrustworthy.
 
 The tools Align competes with, and where they fall short:
 
-**Voice-first tools** (Limitless, SpeakNotes, others): transcribe 
-everything, summarise on demand. High capture volume, low signal density. 
-No operational layer. No typed memory. No concept of "what is in flight 
-right now."
+**Voice-first tools** (Limitless — now dead, acquired by Meta Dec 2025; 
+SpeakNotes; Jamie; Otter): transcribe everything, summarise on demand. 
+High capture volume, low signal density. No operational layer. No typed 
+memory. No concept of "what is in flight right now." Limitless's failure 
+validates that passive accumulation doesn't work even with hardware.
 
-**AI note-taking** (Mem, Notion AI, Reflect): smart search and synthesis 
-over a growing pile of notes. The pile grows; the hygiene problem is 
-deferred, not solved. Passive capture produces more noise than signal 
-over time.
+**AI note-taking** (Mem.ai, Reflect, Capacities): smart search and 
+synthesis over a growing pile of notes. The pile grows; the hygiene 
+problem is deferred, not solved. Passive capture produces more noise 
+than signal over time. Mem.ai's proactive Copilot surfacing is the 
+most differentiated feature in this category.
+
+**AI context layers** (Granola — $1.5B valuation, March 2026): 
+pivoting from meeting notes to enterprise memory infrastructure with 
+MCP integration. Meeting-centric, not voice monologue. No self-pruning. 
+Validates the "memory as AI infrastructure" thesis at scale.
 
 **Task managers** (Things, Linear, Todoist): excellent for task tracking, 
 no voice input, no memory layer, no synthesis. Require manual entry and 
 manual pruning.
 
-**Personal CRMs and second brains** (Roam, Obsidian with plugins): 
+**Personal CRMs and second brains** (Roam, Obsidian with plugins, Tana): 
 powerful but high-maintenance. The system is only as good as the 
-discipline of the person maintaining it.
+discipline of the person maintaining it. Tana's typed-node graph model 
+is the most architecturally interesting approach in this category.
 
 The gap: no tool combines low-friction voice input, a self-maintaining 
 operational dashboard, and a typed memory layer in a single coherent 
-pipeline.
+pipeline. See [competitive-landscape.md](competitive-landscape.md) for 
+detailed profiles and techniques worth adopting.
 
 ---
 
