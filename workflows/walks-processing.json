@@ -1,5 +1,5 @@
 {
-  "name": "Align",
+  "name": "Align Recording to GitHub",
   "nodes": [
     {
       "parameters": {
@@ -14,7 +14,7 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        -160,
+        -288,
         64
       ],
       "webhookId": "e1b0ed00-2d93-445c-8f9b-8fc3475074aa"
@@ -50,7 +50,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        80,
+        -48,
         64
       ],
       "id": "c9f8623e-b9ca-4c97-8e30-32daa16caa07",
@@ -393,7 +393,7 @@
       "type": "n8n-nodes-base.github",
       "typeVersion": 1.1,
       "position": [
-        928,
+        784,
         64
       ],
       "id": "e009fb8e-6bd6-404c-a24e-9aa95cc356e7",
@@ -533,7 +533,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        288,
+        160,
         64
       ],
       "id": "bb2f31ca-25af-4540-b875-e9540a0723a7",
@@ -575,7 +575,7 @@
       "type": "n8n-nodes-base.github",
       "typeVersion": 1.1,
       "position": [
-        512,
+        384,
         64
       ],
       "id": "3e593c83-8d1b-47fc-a35c-a86ce649bdbe",
@@ -595,7 +595,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        720,
+        592,
         64
       ],
       "id": "bf2820d9-8d19-4573-addd-32d197a97c4a",
@@ -721,6 +721,44 @@
           "name": "My Walks Token"
         }
       }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "get",
+        "owner": {
+          "__rl": true,
+          "value": "https://github.com/bitcoin21ideas/",
+          "mode": "url"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "walks",
+          "mode": "list",
+          "cachedResultName": "walks",
+          "cachedResultUrl": "https://github.com/bitcoin21ideas/walks"
+        },
+        "filePath": "memory/_projects.md",
+        "asBinaryProperty": false,
+        "additionalParameters": {}
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        64
+      ],
+      "id": "6899244d-8a40-4e08-b714-eae1a750a9d4",
+      "name": "Get _projects",
+      "webhookId": "4033be34-5ced-4990-bfc4-3335867042e6",
+      "retryOnFail": false,
+      "credentials": {
+        "githubApi": {
+          "id": "u0oRLNwZf6RpWMny",
+          "name": "My Walks Token"
+        }
+      },
+      "onError": "continueRegularOutput"
     }
   ],
   "pinData": {},
@@ -843,7 +881,7 @@
       "main": [
         [
           {
-            "node": "Get memory index",
+            "node": "Get _projects",
             "type": "main",
             "index": 0
           }
@@ -971,6 +1009,17 @@
           }
         ]
       ]
+    },
+    "Get _projects": {
+      "main": [
+        [
+          {
+            "node": "Get memory index",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -982,7 +1031,7 @@
     "errorWorkflow": "hKwMHDUEBHWVPu5V",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "3f12c10b-a988-4043-a0db-404de812a23b",
+  "versionId": "37d936e6-f42c-4d10-af56-34cf5f052a1a",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "d107b667dbcfe458d31a1af9d1fa4cf48ab581d17d0b88e095c67421f97a6dae"
