@@ -14,7 +14,7 @@ Your job is to produce FOUR clearly separated outputs.
 Use this exact structure:
 
 ---
-date: {YYYY-MM-DD}-<slug>
+date: {YYYY-MM-DD}
 energy: {X}
 projects: [{comma separated list of project tags mentioned}]
 tags: [walk-note]
