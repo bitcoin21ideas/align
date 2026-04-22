@@ -31,12 +31,10 @@ Effort signals: `S` = hours | `M` = 1–2 days | `L` = 3–5 days
 
 - [ ] Weekly digest — `#weekly-digest` `M`  
   Scheduled Sunday run. Reads last 7 daily notes + current memory file.
-  Posts structured synthesis: what got done, what stalled, patterns, 
-  oldest open questions.
+  Posts structured synthesis: what got done, what stalled, patterns, oldest open questions.
 
 - [ ] `#ask` memory query endpoint `M`  
-  Discord message → n8n reads memory files + recent notes → Gemini 
-  answers strictly from provided context → Discord reply in thread.
+  Discord message → n8n reads memory files + recent notes → Gemini answers strictly from provided context → Discord reply in thread.
   Initial scope: current month's memory + last 7 daily notes.
 
 ---
@@ -45,15 +43,10 @@ Effort signals: `S` = hours | `M` = 1–2 days | `L` = 3–5 days
 *Goal: make the system smarter about what it already knows.*
 
 - [ ] Monthly pattern detective `M`  
-  Scheduled end-of-month run. Same mechanic as weekly digest, full 
-  month of data. Surfaces recurring themes, unresolved tensions, 
-  compounding patterns across projects.
+  Scheduled end-of-month run. Same mechanic as weekly digest, full month of data. Surfaces recurring themes, unresolved tensions, compounding patterns across projects.
 
 - [ ] 7-day context window in daily processing `L`  
-  Inject last 7 daily notes into the main Gemini prompt alongside the 
-  rolling handover. Improves task continuity, pattern detection, and 
-  memory entry quality. Adds token cost and n8n read complexity — 
-  worthwhile after the corpus is dense enough to justify it.
+  Inject last 7 daily notes into the main Gemini prompt alongside the rolling handover. Improves task continuity, pattern detection, and memory entry quality. Adds token cost and n8n read complexity — worthwhile after the corpus is dense enough to justify it.
 
 ---
 
@@ -61,17 +54,13 @@ Effort signals: `S` = hours | `M` = 1–2 days | `L` = 3–5 days
 *Goal: make the system shareable if the thesis proves out.*
 
 - [ ] RAG with proactive surfacing `L`  
-  Embed memory entries; surface relevant past decisions automatically 
-  during daily note generation. Requires embedding pipeline and vector 
-  store — first real infrastructure addition.
+  Embed memory entries; surface relevant past decisions automatically during daily note generation. Requires embedding pipeline and vector store — first real infrastructure addition.
 
 - [ ] Semantic search `L`  
-  Query memory and notes by meaning rather than keyword. Depends on 
-  RAG infrastructure. Meaningful after 50+ notes in corpus.
+  Query memory and notes by meaning rather than keyword. Depends on RAG infrastructure. Meaningful after 50+ notes in corpus.
 
 - [ ] Packaging and onboarding `L`  
-  Guided setup flow, managed hosting option, UI beyond Discord. 
-  Only warranted if personal use validates the thesis over 6–12 months.  
+  Guided setup flow, managed hosting option, UI beyond Discord. Only warranted if personal use validates the thesis over 6–12 months.  
   See [docs/product-vision.md](docs/product-vision.md).
 
 ---
@@ -83,3 +72,4 @@ Effort signals: `S` = hours | `M` = 1–2 days | `L` = 3–5 days
 - [x] Multiple recordings per day (append under timestamped section)
 - [x] Repo documentation
 - [x] Memory index — persistent flat index injected into every Gemini call, supersession detection live (v0.2.0)
+- [x] Project Registry — `memory/_projects.md` injected each run; Gemini uses only registry tags (never invents tags)

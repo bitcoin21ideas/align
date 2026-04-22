@@ -144,6 +144,7 @@ of the private storage repository:
 
 ```
 memory/
+├── _projects.md           # project tag registry: tag | name | description
 ├── memory-index.md        # one line per entry: id | type | project | summary | supersedes | affects
 ├── 2026-04.md
 └── YYYY-MM.md

@@ -39,7 +39,7 @@ get removed. The result is a document you can act from, not just archive to.
 
 1. Record a voice monologue via iOS Shortcut → uploads to n8n webhook
 2. Deepgram transcribes the audio
-3. n8n reads the current rolling handover and memory index from GitHub
+3. n8n reads the current rolling handover, project registry, and memory index from GitHub
 4. Gemini Flash processes: transcript + handover + memory index → 4 delimited outputs
 5. n8n writes all four outputs to GitHub; appends new entries to the memory index
 
@@ -73,6 +73,7 @@ Storage lives in a separate private repository:
 ├── walks/                  # daily notes
 ├── handover/               # rolling-handover.md + archive.md
 └── memory/
+    ├── _projects.md        # authoritative project tag registry, injected each run
     ├── memory-index.md     # flat index of all memory entries, injected each run
     └── YYYY-MM.md          # monthly memory files
 ```
@@ -105,6 +106,7 @@ The storage repository must contain these files before the first run:
 
 - `handover/rolling-handover.md` — can be empty or seeded with existing tasks
 - `handover/archive.md` — can be empty
+- `memory/_projects.md` — must exist; contains the project tag registry table (tag, name, description)
 - `memory/memory-index.md` — must exist with the v1 header line (see `docs/memory-schema.md`)
 - `memory/YYYY-MM.md` — current month, can be empty
 

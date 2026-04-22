@@ -43,9 +43,10 @@ Handles multilingual input (Russian/English code-switching). Returns a raw trans
 
 ### GitHub API (storage)
 
-Three read operations before the Gemini call:
+Four read operations before the Gemini call:
 - Fetch current `rolling-handover.md` (injected as rolling context)
 - Fetch current `memory/YYYY-MM.md` if it exists (for continuity)
+- Fetch `memory/_projects.md` (injected as project registry — authoritative tag list)
 - Fetch `memory/memory-index.md` (injected as memory index for supersession detection)
 
 Five write operations after:
@@ -61,9 +62,10 @@ All writes target a private repository separate from this one.
 
 Receives a single prompt containing:
 1. Today's date
-2. The memory index (all prior entries, one line each)
-3. The current rolling handover
-4. The raw transcript
+2. The project registry (authoritative list of valid project tags, from `memory/_projects.md`)
+3. The memory index (all prior entries, one line each)
+4. The current rolling handover
+5. The raw transcript
 
 Produces four outputs separated by delimiter lines:
 ```
@@ -86,8 +88,8 @@ Syncs the private storage repo via the Obsidian Git plugin. Read-only view — n
 
 1. iOS Shortcut uploads audio → n8n webhook fires
 2. n8n sends audio to Deepgram → receives transcript
-3. n8n fetches `handover/rolling-handover.md` and `memory/memory-index.md` from GitHub
-4. n8n assembles prompt: date + memory index + handover + transcript
+3. n8n fetches `handover/rolling-handover.md`, `memory/_projects.md`, and `memory/memory-index.md` from GitHub
+4. n8n assembles prompt: date + project registry + memory index + handover + transcript
 5. n8n sends prompt to Gemini Flash → receives combined output
 6. n8n splits output on delimiters
 7. n8n writes all outputs to GitHub; if memory entries were produced, also appends to `memory/memory-index.md`
@@ -111,6 +113,7 @@ If it does, new content is appended under a timestamped `## HH:MM` section rathe
 │   ├── rolling-handover.md # overwritten each run, 60-line cap
 │   └── archive.md          # append-only, never modified
 └── memory/
+    └── _projects.md        # project tag registry, injected into every run
     └── YYYY-MM.md          # append-only, one file per month
     └── memory-index.md     # append-only, one line per entry, injected into every run
 ```
