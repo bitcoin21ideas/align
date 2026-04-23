@@ -66,12 +66,21 @@ jobs:
 
       - name: Check for hardcoded API keys in workflow
         run: |
-          # Look for potential API keys or tokens in the JSON
-          if grep -iE '(api[_-]?key|token|password|secret)['\"']*\s*:\s*['\"][a-z0-9]{20,}' workflows/walks-processing.json; then
-            echo "ERROR: Potential hardcoded API key found in workflow JSON"
-            exit 1
-          fi
-          echo "✓ No obvious API keys in workflow"
+          python3 << 'PY'
+          import re
+          import sys
+
+          text = open("workflows/walks-processing.json", encoding="utf-8").read()
+          # JSON-ish "key": "long-alphanumeric-value" (avoid bash/grep quoting bugs in CI)
+          pat = re.compile(
+              r'(?i)(api[_-]?key|token|password|secret)\s*:\s*["\']\s*([a-z0-9]{20,})\s*["\']',
+              re.MULTILINE,
+          )
+          if pat.search(text):
+              print("ERROR: Potential hardcoded API key or token in workflow JSON")
+              sys.exit(1)
+          print("✓ No obvious API keys in workflow")
+          PY
 
       # 2. Prompt Validation
       - name: Validate Gemini prompt file

@@ -5,6 +5,7 @@
 ## v0.2.1 — 2026-04-23
 
 - Fix: GitHub Actions CI — workflow checks use real n8n node types (HTTP Deepgram, LangChain Gemini) and assert `prompts/gemini-main.md` is referenced
+- Fix: GitHub Actions CI — secret scan step uses Python instead of `grep` to avoid shell quoting errors on the runner
 
 ## v0.2.0 — 2026-04-18
 
