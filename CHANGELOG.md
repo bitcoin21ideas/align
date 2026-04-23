@@ -2,6 +2,10 @@
 
 ---
 
+## v0.2.1 — 2026-04-23
+
+- Fix: GitHub Actions CI — workflow checks use real n8n node types (HTTP Deepgram, LangChain Gemini) and assert `prompts/gemini-main.md` is referenced
+
 ## v0.2.0 — 2026-04-18
 
 - Add: memory index — `memory/memory-index.md` injected into every Gemini call; one line per entry (`id | type | project | summary | supersedes | affects`)

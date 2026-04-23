@@ -19,25 +19,49 @@ jobs:
           python3 -c "import json; json.load(open('workflows/walks-processing.json'))"
           echo "✓ workflows/walks-processing.json is valid JSON"
 
-      - name: Check n8n workflow structure
+      - name: Check n8n workflow invariants
         run: |
           python3 << 'EOF'
           import json
           import sys
 
-          with open('workflows/walks-processing.json') as f:
-              workflow = json.load(f)
+          path = "workflows/walks-processing.json"
+          with open(path) as f:
+              raw = f.read()
+          workflow = json.loads(raw)
 
-          # Required node types for your pipeline
-          required_types = ['n8n-nodes-base.webhook', 'deepgram', 'googleAi']
-          found_types = [node['type'] for node in workflow.get('nodes', [])]
+          types = [n.get("type") for n in workflow.get("nodes", [])]
 
-          missing = [t for t in required_types if t not in found_types]
-          if missing:
-              print(f"ERROR: Missing required node types: {missing}")
+          # Align uses Webhook → HTTP Request (Deepgram) → LangChain Gemini, not legacy node type names.
+          if "n8n-nodes-base.webhook" not in types:
+              print("ERROR: Missing n8n-nodes-base.webhook")
+              sys.exit(1)
+          if "n8n-nodes-base.httpRequest" not in types:
+              print("ERROR: Missing n8n-nodes-base.httpRequest (Deepgram is called via HTTP)")
+              sys.exit(1)
+          if "api.deepgram.com" not in raw:
+              print("ERROR: Workflow must include the Deepgram listen URL")
+              sys.exit(1)
+          if "@n8n/n8n-nodes-langchain.googleGemini" not in types:
+              print("ERROR: Missing @n8n/n8n-nodes-langchain.googleGemini")
+              sys.exit(1)
+          if "prompts/gemini-main.md" not in raw:
+              print("ERROR: Workflow must load the system prompt from prompts/gemini-main.md (GitHub path)")
               sys.exit(1)
 
-          print(f"✓ Found required nodes: {required_types}")
+          gemini = next(
+              (n for n in workflow["nodes"] if n.get("type") == "@n8n/n8n-nodes-langchain.googleGemini"),
+              None,
+          )
+          params = json.dumps(gemini.get("parameters", {}), separators=(",", ":"))
+          if len(params) > 40000:
+              print(
+                  "ERROR: Gemini node parameters are unexpectedly large; "
+                  "keep the full system prompt in prompts/gemini-main.md"
+              )
+              sys.exit(1)
+
+          print("✓ Workflow structure, Deepgram URL, prompt path, and Gemini size checks passed")
           EOF
 
       - name: Check for hardcoded API keys in workflow
@@ -48,18 +72,6 @@ jobs:
             exit 1
           fi
           echo "✓ No obvious API keys in workflow"
-
-      - name: Verify prompt not embedded in workflow
-        run: |
-          # Check if someone edited the Gemini prompt inside the workflow JSON
-          # The prompt should be minimal/instruction-only, not the full text
-          PROMPT_CHARS=$(jq '.nodes[] | select(.type == "googleAi") | .parameters.options.prompt | length' workflows/walks-processing.json)
-          if [ "$PROMPT_CHARS" -gt 500 ]; then
-            echo "ERROR: Gemini prompt in workflow appears too long ($PROMPT_CHARS chars)"
-            echo "The full prompt should live in prompts/gemini-main.md, not the workflow JSON"
-            exit 1
-          fi
-          echo "✓ Gemini prompt in workflow is minimal (reference-only)"
 
       # 2. Prompt Validation
       - name: Validate Gemini prompt file
