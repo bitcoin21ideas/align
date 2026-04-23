@@ -78,7 +78,7 @@
               "content": "===TODAY'S DATE: {{ $json.today }}\n\n## Project Registry\n{{ $json.projectRegistry }}\n\nMEMORY INDEX:\n{{ $json.memoryIndex }}\n\nROLLING CONTEXT:\n{{ $json.rollingContext }}\n\nTODAY'S TRANSCRIPT:\n{{ $json.transcript }}"
             },
             {
-              "content": "={{ $('Decode prompt').item.json.prompt }}"
+              "content": "={{ $('Decode prompt').item.json.augmentedPrompt }}"
             }
           ]
         },
@@ -104,7 +104,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Handover\nconst handoverRaw = $('Get handover').item.json;\nconst rollingContext = Buffer.from(handoverRaw.content, 'base64').toString('utf-8');\n\n// Projects registry — graceful fallback if file missing\nlet projectRegistry = '(no project registry)';\nconst projectsRaw = $('Get _projects').item.json;\nif (projectsRaw && projectsRaw.content) {\n  projectRegistry = Buffer.from(projectsRaw.content, 'base64').toString('utf-8').trim();\n}\n\n// Memory index — direct input (from Get memory index)\nlet memoryIndex = '(no entries yet)';\nlet memoryIndexSHA = '';\nif (items[0].json.content) {\n  memoryIndex = Buffer.from(items[0].json.content, 'base64').toString('utf-8').trim();\n  memoryIndexSHA = items[0].json.sha || '';\n}\n\nreturn [{\n  json: {\n    rollingContext,\n    projectRegistry,\n    memoryIndex,\n    memoryIndexSHA,\n    transcript: $('Get transcript').item.json.transcript,\n    today: new Date().toISOString().slice(0, 10)\n  }\n}];"
+        "jsCode": "// Handover\nconst handoverRaw = $('Get handover').item.json;\nconst rollingContext = Buffer.from(handoverRaw.content, 'base64').toString('utf-8');\n\n// Projects registry — graceful fallback if file missing\nlet projectRegistry = '(no project registry)';\nlet tagList = '#misc, #personal';\nconst projectsRaw = $('Get _projects').item.json;\nif (projectsRaw && projectsRaw.content) {\n  projectRegistry = Buffer.from(projectsRaw.content, 'base64').toString('utf-8').trim();\n  const tagMatches = [...projectRegistry.matchAll(/\\|\\s*`(#\\w+)`\\s*\\|/g)];\n  if (tagMatches.length) tagList = tagMatches.map(m => m[1]).join(', ');\n}\n\n// Memory index — direct input (from Get memory index)\nlet memoryIndex = '(no entries yet)';\nlet memoryIndexSHA = '';\nif (items[0].json.content) {\n  memoryIndex = Buffer.from(items[0].json.content, 'base64').toString('utf-8').trim();\n  memoryIndexSHA = items[0].json.sha || '';\n}\n\n// Inject tag list into system prompt\nconst rawPrompt = $('Decode prompt').item.json.prompt;\nconst augmentedPrompt = rawPrompt.replace('{{PROJECT_TAGS}}', tagList);\n\nreturn [{\n  json: {\n    rollingContext,\n    projectRegistry,\n    memoryIndex,\n    memoryIndexSHA,\n    transcript: $('Get transcript').item.json.transcript,\n    today: new Date().toISOString().slice(0, 10),\n    augmentedPrompt\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1031,7 +1031,7 @@
     "errorWorkflow": "hKwMHDUEBHWVPu5V",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "ca7dd43b-f8e2-40ed-befc-a6403c7afa5d",
+  "versionId": "078e6759-c919-4d4b-874c-bf8ac5adb20b",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "d107b667dbcfe458d31a1af9d1fa4cf48ab581d17d0b88e095c67421f97a6dae"
@@ -1039,16 +1039,16 @@
   "id": "0WN9w6TIPOMTKSe1",
   "tags": [
     {
-      "updatedAt": "2026-02-12T06:02:53.663Z",
-      "createdAt": "2026-02-12T06:02:53.663Z",
-      "id": "5yah6pzKGQBF7TZ4",
-      "name": "loom"
-    },
-    {
       "updatedAt": "2026-04-05T04:20:20.533Z",
       "createdAt": "2026-04-05T04:20:20.533Z",
       "id": "mMQJ05uXx69h21PQ",
       "name": "personal"
+    },
+    {
+      "updatedAt": "2026-02-12T06:02:53.663Z",
+      "createdAt": "2026-02-12T06:02:53.663Z",
+      "id": "5yah6pzKGQBF7TZ4",
+      "name": "loom"
     }
   ]
 }

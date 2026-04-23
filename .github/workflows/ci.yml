@@ -1,0 +1,138 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1. n8n Workflow Validation
+      - name: Validate n8n workflow JSON
+        run: |
+          # Check JSON syntax
+          python3 -c "import json; json.load(open('workflows/walks-processing.json'))"
+          echo "✓ workflows/walks-processing.json is valid JSON"
+
+      - name: Check n8n workflow structure
+        run: |
+          python3 << 'EOF'
+          import json
+          import sys
+
+          with open('workflows/walks-processing.json') as f:
+              workflow = json.load(f)
+
+          # Required node types for your pipeline
+          required_types = ['n8n-nodes-base.webhook', 'deepgram', 'googleAi']
+          found_types = [node['type'] for node in workflow.get('nodes', [])]
+
+          missing = [t for t in required_types if t not in found_types]
+          if missing:
+              print(f"ERROR: Missing required node types: {missing}")
+              sys.exit(1)
+
+          print(f"✓ Found required nodes: {required_types}")
+          EOF
+
+      - name: Check for hardcoded API keys in workflow
+        run: |
+          # Look for potential API keys or tokens in the JSON
+          if grep -iE '(api[_-]?key|token|password|secret)['\"']*\s*:\s*['\"][a-z0-9]{20,}' workflows/walks-processing.json; then
+            echo "ERROR: Potential hardcoded API key found in workflow JSON"
+            exit 1
+          fi
+          echo "✓ No obvious API keys in workflow"
+
+      - name: Verify prompt not embedded in workflow
+        run: |
+          # Check if someone edited the Gemini prompt inside the workflow JSON
+          # The prompt should be minimal/instruction-only, not the full text
+          PROMPT_CHARS=$(jq '.nodes[] | select(.type == "googleAi") | .parameters.options.prompt | length' workflows/walks-processing.json)
+          if [ "$PROMPT_CHARS" -gt 500 ]; then
+            echo "ERROR: Gemini prompt in workflow appears too long ($PROMPT_CHARS chars)"
+            echo "The full prompt should live in prompts/gemini-main.md, not the workflow JSON"
+            exit 1
+          fi
+          echo "✓ Gemini prompt in workflow is minimal (reference-only)"
+
+      # 2. Prompt Validation
+      - name: Validate Gemini prompt file
+        run: |
+          if [ ! -f "prompts/gemini-main.md" ]; then
+            echo "ERROR: prompts/gemini-main.md is missing"
+            exit 1
+          fi
+
+          if [ ! -s "prompts/gemini-main.md" ]; then
+            echo "ERROR: prompts/gemini-main.md is empty"
+            exit 1
+          fi
+
+          # Check for expected sections
+          for section in "OUTPUT 1" "OUTPUT 2" "OUTPUT 3" "OUTPUT 4"; do
+            if ! grep -q "$section" prompts/gemini-main.md; then
+              echo "WARNING: Missing $section section in prompt"
+            fi
+          done
+
+          echo "✓ prompts/gemini-main.md exists and has content"
+
+      # 3. CHANGELOG Enforcement
+      - name: Check CHANGELOG updated for relevant changes
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch origin ${{ github.base_ref }} --depth=1
+
+          # Check if workflows/ or prompts/ were modified
+          if git diff --name-only origin/${{ github.base_ref }} | grep -qE '^(workflows/|prompts/)'; then
+            # These files were changed — CHANGELOG must be too
+            if ! git diff --name-only origin/${{ github.base_ref }} | grep -q '^CHANGELOG.md$'; then
+              echo "ERROR: Changes to workflows/ or prompts/ require CHANGELOG.md update"
+              echo "Per CLAUDE.md: 'On every git commit, update CHANGELOG.md'"
+              exit 1
+            fi
+          fi
+          echo "✓ CHANGELOG check passed"
+
+      # 4. Documentation Linting (optional, lightweight)
+      - name: Check markdown formatting
+        run: |
+          # Check for broken internal links (e.g., [text](docs/file.md))
+          for file in $(find . -name '*.md' -not -path './.cursor/*'); do
+            dir=$(dirname "$file")
+            grep -oE '\[([^]]+)\]\(([^)]+\.md)\)' "$file" | while read -r match; do
+              link=$(echo "$match" | sed -E 's/.*\]\((.*\.md)\)/\1/')
+              # Resolve relative to the file's directory
+              if [[ "$link" == /* ]]; then
+                target=".$link"
+              else
+                target="$dir/$link"
+              fi
+              if [ ! -f "$target" ]; then
+                echo "WARNING: Broken link in $file: $link"
+              fi
+            done
+          done
+          echo "✓ Link check complete"
+
+      # 5. Schema Validation (if memory files exist in repo)
+      - name: Validate memory entry schemas
+        run: |
+          if [ -d "memory" ]; then
+            for f in memory/*.json; do
+              [ -e "$f" ] || continue
+              python3 -c "import json; json.load(open('$f'))" || {
+                echo "ERROR: Invalid JSON in $f"
+                exit 1
+              }
+            done
+            echo "✓ Memory entries are valid JSON"
+          else
+            echo "ℹ No memory/ directory — skipping schema validation"
+          fi
