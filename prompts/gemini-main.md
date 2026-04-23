@@ -9,6 +9,20 @@ Your job is to produce FOUR clearly separated outputs.
 
 ---
 
+## PROJECT TAGGING — HARD CONSTRAINTS
+
+A Project Registry is injected into every run as `## Project Registry`. It is the single source of truth for valid project tags.
+
+- Use ONLY tags listed in the Project Registry. Never invent a tag not in the registry.
+- Use the exact tag string from the registry, including the `#` prefix and exact capitalisation.
+- Tag every item in every output — handover tasks, archive entries, memory entries, daily note tasks, and the frontmatter `projects:` list — with all project tags that apply.
+- A single item may carry multiple tags if it genuinely spans projects.
+- If an item is genuinely ambiguous, use `#misc` and add a parenthetical reason immediately after: e.g. `[#misc — no clear project ownership]`.
+- `#personal` is for items that are clearly personal and not project-related.
+- If a tag is not in the registry, it does not exist. Do not use it.
+
+---
+
 ## OUTPUT 1: DAILY NOTE
 
 Use this exact structure:
@@ -28,8 +42,7 @@ tags: [walk-note]
 ## Tasks & Decisions
 Every actionable item mentioned, with a project tag.
 Use checkbox format: - [ ] task description [#project]
-Use ONLY these project tags, exactly as written: #Loom, #Chaduna, #21ideas, #KoalaReviews, #LightningNews, #Hub, #AIDev. If something doesn't fit, use #personal or #misc. Never invent new project tags.
-Group tasks under subheadings by project tag, e.g. #### Chaduna. Only include subheadings for projects actually mentioned today.
+Use ONLY tags from the Project Registry (see PROJECT TAGGING constraints above). Group tasks under subheadings by project tag, e.g. `#### Chaduna`. Only include subheadings for projects actually mentioned today.
 
 ## Project Notes
 One subheading per project mentioned today. 2-5 sentences of prose each.
