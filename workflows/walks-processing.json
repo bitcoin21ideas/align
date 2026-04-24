@@ -78,7 +78,7 @@
               "content": "===TODAY'S DATE: {{ $json.today }}\n\n## Project Registry\n{{ $json.projectRegistry }}\n\nMEMORY INDEX:\n{{ $json.memoryIndex }}\n\nROLLING CONTEXT:\n{{ $json.rollingContext }}\n\nTODAY'S TRANSCRIPT:\n{{ $json.transcript }}"
             },
             {
-              "content": "={{ $('Decode prompt').item.json.augmentedPrompt }}"
+              "content": "={{ $('Decode').item.json.augmentedPrompt }}"
             }
           ]
         },
@@ -541,12 +541,13 @@
     },
     {
       "parameters": {
-        "content": "Enhance the Memory branch to create a new YYYY-MM.md file on every 1st of each month."
+        "content": "Memory branch creates a new `YYYY-MM.md` file on each first recording of the month, **NOT** on the 1st of each month.",
+        "height": 96
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        2208,
-        544
+        2176,
+        560
       ],
       "typeVersion": 1,
       "id": "7463b0fa-bcc6-48c5-9a42-8a249e6fe88a",
@@ -1031,7 +1032,7 @@
     "errorWorkflow": "hKwMHDUEBHWVPu5V",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "078e6759-c919-4d4b-874c-bf8ac5adb20b",
+  "versionId": "729fb215-4722-487f-b3df-8c376e762bed",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "d107b667dbcfe458d31a1af9d1fa4cf48ab581d17d0b88e095c67421f97a6dae"
