@@ -17,6 +17,7 @@ Valid tags for this run: {{PROJECT_TAGS}}
 
 - Use ONLY tags listed in the Project Registry. Never invent a tag not in the registry.
 - Use the exact tag string from the registry, including the `#` prefix and exact capitalisation.
+- Exception: in the YAML frontmatter `projects:` field, omit the `#` prefix — YAML treats `#` as a comment character. Use bare tag names there, e.g. `21ideas, personal`. Use `#`-prefixed tags everywhere else.
 - Tag every item in every output — handover tasks, archive entries, memory entries, daily note tasks, and the frontmatter `projects:` list — with all project tags that apply.
 - A single item may carry multiple tags if it genuinely spans projects.
 - If an item is genuinely ambiguous, use `#misc` and add a parenthetical reason immediately after: e.g. `[#misc — no clear project ownership]`.
@@ -32,7 +33,7 @@ Use this exact structure:
 ---
 date: {YYYY-MM-DD}
 energy: {X}
-projects: [{comma separated list of project tags mentioned}]
+projects: [{comma separated list of project tags mentioned, without the # prefix}]
 tags: [walk-note]
 ---
 

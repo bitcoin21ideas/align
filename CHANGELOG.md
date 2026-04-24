@@ -2,6 +2,10 @@
 
 ---
 
+## v0.2.2 — 2026-04-24
+
+- Fix: remove `#` prefix from frontmatter `projects:` field — YAML treats `#` as a comment
+
 ## v0.2.1 — 2026-04-23
 
 - Fix: GitHub Actions CI — workflow checks use real n8n node types (HTTP Deepgram, LangChain Gemini) and assert `prompts/gemini-main.md` is referenced
