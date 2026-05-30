@@ -41,7 +41,7 @@ get removed. The result is a document you can act from, not just archive to.
 2. Deepgram transcribes the audio
 3. n8n reads the current rolling handover, project registry, and memory index from GitHub
 4. Gemini Flash processes: transcript + handover + memory index → 4 delimited outputs
-5. n8n writes all four outputs to GitHub; appends new entries to the memory index
+5. n8n writes the outputs to GitHub; memory files and the memory index update only when new memory entries exist
 
 Total runtime: ~30–60 seconds.
 
@@ -96,9 +96,9 @@ Storage lives in a separate private repository:
 1. Clone this repository
 2. Import `workflows/walks-processing.json` into n8n
 3. Configure credentials in n8n for Deepgram, Google AI, and GitHub
-4. Set environment variables (see `workflows/README.md` for the full list)
-5. Activate the workflow — note the generated webhook URL
-6. Update your iOS Shortcut with the webhook URL
+4. Reselect the Align repo and private storage repo in each GitHub node
+5. Configure Webhook node authentication before activation
+6. Activate the workflow, copy the generated webhook URL, and update your iOS Shortcut with the URL plus required auth header
 
 ### First run requirements
 
@@ -125,4 +125,4 @@ See [docs/philosophy.md](docs/philosophy.md) for the full design rationale.
 
 ## Roadmap
 
-See [ROADMAP.md](ROADMAP.md). Discord integration is next.
+See [ROADMAP.md](ROADMAP.md). Hardening work gates Discord integration.

@@ -5,6 +5,11 @@
 ## v0.2.2 — 2026-04-24
 
 - Fix: remove `#` prefix from frontmatter `projects:` field — YAML treats `#` as a comment
+- Add: Node sanitizer/checker for public n8n workflow exports; workflow JSON now uses placeholders for credentials, webhook metadata, and repo references
+- Add: AGENTS.md commit procedure for workflow sanitization, secret checks, and no agent attribution trailers
+- Change: Load local forbidden workflow-export strings from `.env` instead of hardcoding them in the checker
+- Fix: Gate memory file and memory-index writes when Gemini returns no memory entries
+- Docs: Clarify public setup/export hygiene, keep operator security notes private, and move hardening ahead of Discord in the roadmap
 
 ## v0.2.1 — 2026-04-23
 

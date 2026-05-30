@@ -1,6 +1,6 @@
 # Workflow: walks-processing
 
-The main Align pipeline. Triggered by a voice recording, produces four 
+The main Align pipeline. Triggered by a voice recording, produces four
 structured outputs written to GitHub.
 
 ---
@@ -30,31 +30,32 @@ Webhook (Receive File)
 ## Nodes
 
 ### Webhook (Receive File)
-**Type:** Webhook trigger  
-**Path:** `process-the-walk`  
+**Type:** Webhook trigger
+**Path:** `replace-with-random-webhook-path` in the public template
 **Method:** POST, binary data enabled
 
-Entry point for the pipeline. Receives the audio file uploaded by the 
-iOS Shortcut. Binary mode is required — the audio arrives as a file, 
+Entry point for the pipeline. Receives the audio file uploaded by the
+iOS Shortcut. Binary mode is required — the audio arrives as a file,
 not JSON.
 
-After importing the workflow, activate it and copy the generated webhook 
-URL into your iOS Shortcut.
+After importing the workflow, set Webhook node authentication, replace the
+placeholder path with a new random value, activate it, and copy the generated
+webhook URL plus required auth header into your iOS Shortcut.
 
 ---
 
 ### HTTP Request
-**Type:** HTTP Request  
+**Type:** HTTP Request
 **Service:** Deepgram Nova-3
 
-Sends the audio binary to Deepgram's `/v1/listen` endpoint with three 
+Sends the audio binary to Deepgram's `/v1/listen` endpoint with three
 query parameters:
 - `model: nova-3` — latest Deepgram model
 - `smart_format: true` — adds punctuation and paragraph breaks
-- `detect_language: true` — handles Russian/English code-switching 
+- `detect_language: true` — handles Russian/English code-switching
   without specifying a language upfront
 
-Uses an HTTP Header Auth credential (your Deepgram API key as a 
+Uses an HTTP Header Auth credential (your Deepgram API key as a
 `Authorization: Token ...` header).
 
 ---
@@ -62,19 +63,19 @@ Uses an HTTP Header Auth credential (your Deepgram API key as a
 ### Get transcript
 **Type:** Code (JavaScript)
 
-Extracts the transcript string from Deepgram's response. Prefers the 
-paragraphs transcript (formatted) over the raw alternatives transcript. 
+Extracts the transcript string from Deepgram's response. Prefers the
+paragraphs transcript (formatted) over the raw alternatives transcript.
 Returns `{ transcript }`.
 
 ---
 
 ### Get prompt
-**Type:** GitHub (get file)  
-**Repo:** this Align repository  
+**Type:** GitHub (get file)
+**Repo:** this Align repository
 **File:** `prompts/gemini-main.md`
 
-Reads the Gemini system prompt from this repo at runtime. Because the 
-prompt is fetched live on every run, editing `prompts/gemini-main.md` 
+Reads the Gemini system prompt from this repo at runtime. Because the
+prompt is fetched live on every run, editing `prompts/gemini-main.md`
 and pushing takes effect immediately — no workflow reimport required.
 
 ---
@@ -82,16 +83,16 @@ and pushing takes effect immediately — no workflow reimport required.
 ### Decode prompt
 **Type:** Code (JavaScript)
 
-Decodes the base64 file content returned by the GitHub API into a plain 
+Decodes the base64 file content returned by the GitHub API into a plain
 string and passes it forward as `{ prompt }`.
 
 ---
 
 ### Get handover
-**Type:** GitHub (get file)  
+**Type:** GitHub (get file)
 **File:** `handover/rolling-handover.md`
 
-Reads the current rolling handover from the storage repo. The file 
+Reads the current rolling handover from the storage repo. The file
 content is returned base64-encoded by the GitHub API.
 
 ---
@@ -99,28 +100,28 @@ content is returned base64-encoded by the GitHub API.
 ### Decode
 **Type:** Code (JavaScript)
 
-Decodes the base64 handover content and assembles the three inputs 
-Gemini needs: `rollingContext`, `transcript`, and `today` (ISO date 
+Decodes the base64 handover content and assembles the three inputs
+Gemini needs: `rollingContext`, `transcript`, and `today` (ISO date
 string). This is the final preparation step before the AI call.
 
 ---
 
 ### Message a model
-**Type:** Google Gemini (LangChain node)  
+**Type:** Google Gemini (LangChain node)
 **Model:** `gemini-3-flash-preview`
 
 The core AI step. Receives two messages:
 1. **User message** — today's date, rolling context, and transcript
 2. **System message** — the full processing prompt
 
-The system prompt is injected at runtime via the `Decode prompt` node — 
-it is not embedded here. Edit `prompts/gemini-main.md` directly; 
+The system prompt is injected at runtime via the `Decode prompt` node —
+it is not embedded here. Edit `prompts/gemini-main.md` directly;
 changes take effect on the next run.
 
-Configured with `retryOnFail: true` and a 5-second wait between retries 
+Configured with `retryOnFail: true` and a 5-second wait between retries
 to handle transient Gemini API errors without manual re-runs.
 
-Produces a single text response containing all four outputs separated 
+Produces a single text response containing all four outputs separated
 by delimiter lines.
 
 ---
@@ -135,9 +136,9 @@ Splits the Gemini response on three delimiters:
 ===MEMORY_ENTRIES===
 ```
 
-Throws an explicit error if any delimiter is missing — this surfaces 
-malformed Gemini output immediately rather than writing corrupt data 
-to GitHub. Returns `{ dailyNote, rollingUpdate, archiveEntries, memoryEntries, today }`.
+Throws an explicit error if any delimiter is missing — this surfaces
+malformed Gemini output immediately rather than writing corrupt data
+to GitHub. Returns `{ dailyNote, rollingUpdate, archiveEntries, memoryEntries, hasMemoryEntries, today }`.
 
 From here the workflow fans out into four parallel branches.
 
@@ -145,67 +146,78 @@ From here the workflow fans out into four parallel branches.
 
 ### Branch 1 — Rolling handover
 
-**Edit a file** (GitHub, edit)  
-Overwrites `handover/rolling-handover.md` with the new handover. 
+**Edit a file** (GitHub, edit)
+Overwrites `handover/rolling-handover.md` with the new handover.
 This is a full rewrite every run — not an append.
 
 ---
 
 ### Branch 2 — Archive
 
-**Get archive** (GitHub, get file)  
+**Get archive** (GitHub, get file)
 Reads the current `handover/archive.md`.
 
-**Decode archive** (Code)  
+**Decode archive** (Code)
 Decodes the base64 content into a plain string.
 
-**Append to archive** (GitHub, edit)  
-Appends today's archive entries under a `### YYYY-MM-DD` heading. 
+**Append to archive** (GitHub, edit)
+Appends today's archive entries under a `### YYYY-MM-DD` heading.
 Concatenates existing content + new entries — the file only grows.
 
 ---
 
 ### Branch 3 — Memory
 
-**Get memory** (GitHub, get file)  
+**If1** (IF)
+Routes to the memory branch only when `hasMemoryEntries` is true. If
+Gemini returns exactly `(no memory entries today)`, the workflow skips
+both the monthly memory file write and the derived memory-index update.
+
+**Get memory** (GitHub, get file)
 Reads the current month's memory file (`memory/YYYY-MM.md`).
 
-**Decode memory** (Code)  
+**Decode memory** (Code)
 Decodes the base64 content.
 
-**Append memory** (GitHub, edit)  
-Appends today's memory entries under a `## YYYY-MM-DD` heading. 
-File path is computed dynamically from today's date, so a new file 
+**Append memory** (GitHub, edit)
+Appends today's memory entries under a `## YYYY-MM-DD` heading.
+File path is computed dynamically from today's date, so a new file
 is created automatically at the start of each month.
 
 ---
 
 ### Branch 4 — Daily note
 
-**Check daily note exists** (GitHub, get file)  
-Attempts to fetch `walks/YYYY-MM-DD.md`. The node is set to 
-`continueRegularOutput` on error — a 404 (file not found) is the 
+**Check daily note exists** (GitHub, get file)
+Attempts to fetch `walks/YYYY-MM-DD.md`. The node is set to
+`continueRegularOutput` on error — a 404 (file not found) is the
 expected state on first run of the day and should not halt the workflow.
-`asBinaryProperty: false` is required so the GitHub API returns file 
+`asBinaryProperty: false` is required so the GitHub API returns file
 content as JSON rather than binary data.
 
-**Decode daily note** (Code)  
-Handles both cases: if the file exists, decodes and returns the content 
-with `fileExists: true` and the file's `sha`; if not (error or empty 
+**Decode daily note** (Code)
+Handles both cases: if the file exists, decodes and returns the content
+with `fileExists: true` and the file's `sha`; if not (error or empty
 content), returns an empty string with `fileExists: false`.
 
-**If**  
+**If**
 Routes on `fileExists`:
-- `true` → **Edit daily note** — appends new content under a 
+- `true` → **Edit daily note** — appends new content under a
   `## Second Note — HH:MM` section
 - `false` → **Create a file** — writes the daily note as a new file
 
 ---
 
-## One thing to know before importing
+## Things to know before importing
 
-The GitHub nodes use `mode: list` for the repository selector, which 
-caches the repo name and URL at workflow-build time. After importing, 
-open each GitHub node and reselect your repository from the dropdown — 
-this refreshes the cached values to point at your actual repo. There are 
-nine GitHub nodes in total.
+The GitHub nodes use `mode: list` for the repository selector, which
+caches the repo name and URL at workflow-build time. After importing,
+open each GitHub node and reselect your repository from the dropdown —
+this refreshes the cached values to point at your actual repo. There are
+thirteen GitHub nodes in total.
+
+The committed workflow JSON is sanitized for public reuse. Credential IDs,
+credential names, webhook IDs, GitHub owner values, repository values, and
+cached GitHub URLs are placeholders. After importing, set the webhook path
+to your own random value, select the Deepgram/Gemini/GitHub credentials,
+and select the correct GitHub repositories before activation.
