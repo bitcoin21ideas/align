@@ -82,6 +82,9 @@ jobs:
           print("✓ No obvious API keys in workflow")
           PY
 
+      - name: Check public workflow is sanitized
+        run: node scripts/check-public-workflow.mjs
+
       # 2. Prompt Validation
       - name: Validate Gemini prompt file
         run: |

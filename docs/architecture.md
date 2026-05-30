@@ -2,7 +2,7 @@
 
 ## Overview
 
-Align is a linear pipeline triggered by a voice recording. Each run produces four output files written to GitHub. The pipeline has no database, no persistent server state, and no queue — it is a stateless transformation from audio to structured markdown.
+Align is a linear pipeline triggered by a voice recording. Each run produces structured Markdown outputs written to GitHub. The pipeline has no database, no persistent server state, and no queue — it is a stateless transformation from audio to structured markdown.
 
 ```
 iOS Shortcut
@@ -20,7 +20,7 @@ Gemini Flash (single prompt → 4 structured outputs)
     ├─── Output 1: daily note       → GitHub (walks/YYYY-MM-DD.md)
     ├─── Output 2: rolling handover → GitHub (rolling-handover.md, overwrite)
     ├─── Output 3: archive entries  → GitHub (archive.md, append)
-    └─── Output 4: memory entries   → GitHub (memory/YYYY-MM.md, append) → GitHub (memory/memory-index.md, append — derived)
+    └─── Output 4: memory entries   → GitHub (memory/YYYY-MM.md, conditional append) → GitHub (memory/memory-index.md, conditional derived append)
 ```
 
 ---
@@ -29,11 +29,11 @@ Gemini Flash (single prompt → 4 structured outputs)
 
 ### iOS Shortcut
 
-Triggers the pipeline. Records audio, uploads the file to a webhook URL, and fires the n8n trigger. No other client-side logic.
+Triggers the pipeline. Records audio, uploads the file to an authenticated webhook URL, and fires the n8n trigger. No other client-side logic.
 
 ### n8n (orchestration)
 
-Self-hosted. Receives the webhook, sequences all downstream calls, and handles the four GitHub writes at the end of each run.
+Self-hosted. Receives the webhook, sequences all downstream calls, and handles the GitHub writes at the end of each run.
 
 All workflow logic lives in the importable workflow JSON. The Gemini system prompt is managed in `prompts/gemini-main.md` and injected at runtime — it is not embedded in the workflow itself.
 
@@ -53,8 +53,8 @@ Five write operations after:
 - Create or update `walks/YYYY-MM-DD.md`
 - Overwrite `handover/rolling-handover.md`
 - Append to `handover/archive.md`
-- Append to `memory/YYYY-MM.md`
-- Append to `memory/memory-index.md` (only when new memory entries were written)
+- Append to `memory/YYYY-MM.md` only when new memory entries were written
+- Append to `memory/memory-index.md` only when new memory entries were written
 
 All writes target a private repository separate from this one.
 
@@ -92,7 +92,7 @@ Syncs the private storage repo via the Obsidian Git plugin. Read-only view — n
 4. n8n assembles prompt: date + project registry + memory index + handover + transcript
 5. n8n sends prompt to Gemini Flash → receives combined output
 6. n8n splits output on delimiters
-7. n8n writes all outputs to GitHub; if memory entries were produced, also appends to `memory/memory-index.md`
+7. n8n writes outputs to GitHub; if memory entries were produced, it appends to both `memory/YYYY-MM.md` and `memory/memory-index.md`
 
 Total runtime: ~30–60 seconds depending on transcript length.
 
@@ -122,7 +122,7 @@ If it does, new content is appended under a timestamped `## HH:MM` section rathe
 
 ## What n8n does not do
 
-- No validation of Gemini output structure — delimiter parsing assumes well-formed output
+- Only delimiter validation of Gemini output structure; rolling handover line-cap and memory block validation are deferred
 - No deduplication of archive entries
 
 These are intentional omissions. Robustness complexity is not justified at this scale.
@@ -131,7 +131,7 @@ These are intentional omissions. Robustness complexity is not justified at this 
 
 ## Planned additions
 
-See [ROADMAP.md](../ROADMAP.md) for sequencing. The next architectural change is Discord integration, which adds:
+See [ROADMAP.md](../ROADMAP.md) for sequencing. After webhook hardening and workflow validation, the next architectural change is Discord integration, which adds:
 - An outbound webhook from n8n to a Discord channel after each run
 - A second n8n workflow triggered by Discord messages for text-input capture and memory queries
 
